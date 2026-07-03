@@ -2,6 +2,7 @@ export type NavLink = {
   label: string;
   href: string;
   description?: string;
+  adminOnly?: boolean;
 };
 
 export type NavGroup = {
