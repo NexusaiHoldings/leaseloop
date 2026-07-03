@@ -29,10 +29,17 @@ export type PMSUnit = {
   leaseEnd: string | null;
 };
 
+export type HealthCheckResult = {
+  ok: boolean;
+  message: string;
+  latencyMs: number;
+};
+
 export interface PMSAdapter {
   pmsType: PMSType;
   fetchUnits(propertyExternalId: string): Promise<PMSUnit[]>;
   testConnection(): Promise<boolean>;
+  healthCheck(): Promise<HealthCheckResult>;
 }
 
 // ── Yardi Voyager ──────────────────────────────────────────────────────────
@@ -99,6 +106,29 @@ export class YardiAdapter implements PMSAdapter {
       return [];
     }
   }
+
+  async healthCheck(): Promise<HealthCheckResult> {
+    const start = Date.now();
+    if (!this.config.baseUrl || !this.config.username || !this.config.password) {
+      return { ok: false, message: 'Missing Yardi credentials — provide base URL, username, and password', latencyMs: 0 };
+    }
+    try {
+      const ok = await this.testConnection();
+      return {
+        ok,
+        message: ok
+          ? 'Connected to Yardi Voyager successfully'
+          : 'Invalid Yardi API key — update credentials',
+        latencyMs: Date.now() - start,
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        message: err instanceof Error ? err.message : 'Yardi connection failed',
+        latencyMs: Date.now() - start,
+      };
+    }
+  }
 }
 
 // ── AppFolio ───────────────────────────────────────────────────────────────
@@ -160,6 +190,29 @@ export class AppFolioAdapter implements PMSAdapter {
       return [];
     }
   }
+
+  async healthCheck(): Promise<HealthCheckResult> {
+    const start = Date.now();
+    if (!this.config.clientId || !this.config.clientSecret || !this.config.baseUrl) {
+      return { ok: false, message: 'Missing AppFolio credentials — provide base URL, client ID, and client secret', latencyMs: 0 };
+    }
+    try {
+      const ok = await this.testConnection();
+      return {
+        ok,
+        message: ok
+          ? 'Connected to AppFolio successfully'
+          : 'Invalid AppFolio API key — update client ID or secret',
+        latencyMs: Date.now() - start,
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        message: err instanceof Error ? err.message : 'AppFolio connection failed',
+        latencyMs: Date.now() - start,
+      };
+    }
+  }
 }
 
 // ── Manual (no PMS) ────────────────────────────────────────────────────────
@@ -173,6 +226,10 @@ export class ManualAdapter implements PMSAdapter {
 
   async fetchUnits(_propertyExternalId: string): Promise<PMSUnit[]> {
     return [];
+  }
+
+  async healthCheck(): Promise<HealthCheckResult> {
+    return { ok: true, message: 'Manual CSV mode — no external connection required', latencyMs: 0 };
   }
 }
 
