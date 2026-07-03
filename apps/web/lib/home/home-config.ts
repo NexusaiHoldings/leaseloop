@@ -121,7 +121,7 @@ export const homeConfig: HomeConfig = {
       "subhead": "TenantThread deploys AI voice and chat agents that handle maintenance triage, leasing questions, and tour scheduling around the clock \u2014 so your lean team wakes up to resolved tickets, not missed calls.",
       "primaryCta": {
         "label": "Request a pilot",
-        "href": "/pilot"
+        "href": "/chat"
       },
       "secondaryCta": {
         "label": "See how it works",
